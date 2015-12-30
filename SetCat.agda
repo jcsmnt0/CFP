@@ -201,18 +201,15 @@ module DependentPairEqualizer {ℓ} {a b : Set ℓ} (f g : a ⇒ b) where
   open import Function using (const)
   open Category (setCategory ℓ)
   open Structures (setCategory ℓ)
-  open Equalizer
+  open Equalizer (setCategory ℓ) f g renaming (Equalizer to Equalizerᶠᵍ)
 
   DepEq : Set ℓ
   DepEq = ∃ λ x → f x ≡ g x
 
-  open Functor (Δ categoryI (setCategory ℓ) DepEq) renaming (map to mapᵟ)
-  open Functor (functorD (setCategory ℓ) f g)
+  open Functor (Δ catᴵ (setCategory ℓ) DepEq) renaming (map to mapᵟ)
+  open Functor functorD
 
-  δ : ∀ {t : Set ℓ} → a ⇒ const a t
-  δ = id
-
-  α : ∀ x → const DepEq x ⇒ D a b x
+  α : ∀ x → const DepEq x ⇒ D x
   α {aᴵ} = proj₁
   α {bᴵ} = f ∘ proj₁
 
@@ -223,33 +220,67 @@ module DependentPairEqualizer {ℓ} {a b : Set ℓ} (f g : a ⇒ b) where
   naturality gᴵ = ext proj₂
   
   factor : ∀
-   {apex′}
-   (nt : NaturalTransformation (Δ categoryI (setCategory ℓ) apex′) (functorD (setCategory ℓ) f g))
+   {c}
+   (β : ∀ x → const c x ⇒ D x)
+   (nt : NaturalTransformation (Δ catᴵ (setCategory ℓ) c) functorD β)
    (a : I)
    →
-   let β = NaturalTransformation.α nt in ∃ λ m → (β a ≡ α a ∘ m)
-  factor nt = λ
-    { aᴵ →
-        ( (λ x → (β aᴵ x , trans (sym (naturalityᵝ fᴵ $$ x)) (naturalityᵝ gᴵ $$ x)))
-        , refl
-        )
-    ; bᴵ →
-        ( (λ x → (β aᴵ x , trans (sym (naturalityᵝ fᴵ $$ x)) (naturalityᵝ gᴵ $$ x)))
-        , naturalityᵝ fᴵ
-        )
+   ∃ λ m → (β a ≡ α a ∘ m)
+  factor β nt = λ
+    { aᴵ → ((λ x → (β aᴵ x , trans (sym (naturalityᵝ fᴵ $$ x)) (naturalityᵝ gᴵ $$ x))) , refl)
+    ; bᴵ → ((λ x → (β aᴵ x , trans (sym (naturalityᵝ fᴵ $$ x)) (naturalityᵝ gᴵ $$ x))) , naturalityᵝ fᴵ)
     }
-    where
-      open NaturalTransformation nt renaming (α to β; naturality to naturalityᵝ)
+    where open NaturalTransformation nt renaming (naturality to naturalityᵝ)
 
   instance
-    DepEq-Equalizer : Equalizer (setCategory ℓ) f g
+    DepEq-Equalizer : Equalizerᶠᵍ DepEq
     DepEq-Equalizer = record
-      { cone = record
-        { apex = DepEq
-        ; naturalTransformation = record
-          { α = α
-          ; naturality = naturality
-          }
-        }
+      { cone = record { naturalTransformation = record { naturality = naturality } }
+      ; factor = factor
+      }
+
+module ProductPullback {ℓ} {a b c : Set ℓ} (f : a → b) (g : c → b) where
+  open import Data.Product using (∃; _,_; proj₁; proj₂)
+  open import Function using (const)
+  open Category (setCategory ℓ)
+  open Structures (setCategory ℓ)
+  open Pullback (setCategory ℓ) f g renaming (Pullback to Pullbackᶠᵍ)
+
+  ProdEq : Set ℓ
+  ProdEq = ∃ λ x → f (proj₁ x) ≡ g (proj₂ x)
+
+  open Functor (Δ catᴵ (setCategory ℓ) ProdEq) renaming (map to mapᵟ)
+  open Functor functorD
+
+  α : ∀ x → const ProdEq x ⇒ D x
+  α aᴵ = proj₁ ∘ proj₁
+  α bᴵ = f ∘ proj₁ ∘ proj₁
+  α cᴵ = proj₂ ∘ proj₁
+
+  naturality : ∀ {a b} (h : a ⇒ᴵ b) → α b ∘ mapᵟ h ≡ map h ∘ α a
+  naturality {aᴵ} idᴵ = refl
+  naturality {bᴵ} idᴵ = refl
+  naturality {cᴵ} idᴵ = refl
+  naturality fᴵ = refl
+  naturality gᴵ = ext proj₂
+  
+  factor : ∀
+    {c}
+    (β : ∀ x → const c x ⇒ D x)
+    (nt : NaturalTransformation (Δ catᴵ (setCategory ℓ) c) functorD β)
+    (a : I)
+    →
+    ∃ λ m → (β a ≡ α a ∘ m)
+  factor β nt = λ
+    { aᴵ → ((λ x → (β aᴵ x , β cᴵ x) , trans (sym (naturalityᵝ fᴵ $$ x)) (naturalityᵝ gᴵ $$ x)) , refl)
+    ; bᴵ → ((λ x → (β aᴵ x , β cᴵ x) , trans (sym (naturalityᵝ fᴵ $$ x)) (naturalityᵝ gᴵ $$ x)) , naturalityᵝ fᴵ)
+    ; cᴵ → ((λ x → (β aᴵ x , β cᴵ x) , trans (sym (naturalityᵝ fᴵ $$ x)) (naturalityᵝ gᴵ $$ x)) , refl)
+    }
+    where open NaturalTransformation nt renaming (naturality to naturalityᵝ)
+
+  instance
+    ProdEq-Pullback : Pullbackᶠᵍ ProdEq
+    ProdEq-Pullback = record
+      { cone = record { naturalTransformation = record { naturality = naturality } }
       ; factor = factor
       }

@@ -245,13 +245,13 @@ record NaturalTransformation {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
     {cat : Category O _⇒_} {catᵅ : Category Oᵅ _⇒ᵅ_}
     {F : O → Oᵅ} {G : O → Oᵅ}
     (functorF : Functor cat catᵅ F) (functorG : Functor cat catᵅ G)
+    (α : ∀ a → F a ⇒ᵅ G a)
     : Set (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ ⊔ ℓ₄) where
   open Category {{...}}
   open Functor functorF renaming (map to mapᶠ)
   open Functor functorG renaming (map to mapᵍ)
 
   field
-    α : ∀ a → F a ⇒ᵅ G a
     naturality : ∀ {a b} (f : a ⇒ b) → α b ∘ mapᶠ f ≡ mapᵍ f ∘ α a
 
 record Cone {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
@@ -260,14 +260,15 @@ record Cone {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
     {cat : Category O _⇒_} {catᴵ : Category Oᴵ _⇒ᴵ_}
     {D : Oᴵ → O}
     (functorD : Functor catᴵ cat D)
+    (apex : O)
     :
     Set (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ ⊔ ℓ₄) where
   open Category {{...}}
   open NaturalTransformation {{...}}
 
   field
-    apex : O
-    naturalTransformation : NaturalTransformation (Δ catᴵ cat apex) functorD
+    α : ∀ a → const apex a ⇒ D a
+    naturalTransformation : NaturalTransformation (Δ catᴵ cat apex) functorD α
 
 -- aka universal cone
 record Limit
@@ -277,25 +278,34 @@ record Limit
     {cat : Category O _⇒_} {catᴵ : Category Oᴵ _⇒ᴵ_}
     {D : Oᴵ → O}
     (functorD : Functor catᴵ cat D)
+    (apex : O)
     :
     Set (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ ⊔ ℓ₄) where
   open Category {{...}}
 
   field
-    cone : Cone functorD
+    cone : Cone functorD apex
 
   open Cone cone
   open NaturalTransformation naturalTransformation
 
   field
     factor :
-      {apex′ : O}
-      (nt : NaturalTransformation (Δ catᴵ cat apex′) functorD)
+      {c : O}
+      (β : ∀ a → const c a ⇒ D a)
+      (nt : NaturalTransformation (Δ catᴵ cat c) functorD β)
       (a : Oᴵ)
       →
-      let β = NaturalTransformation.α nt in Σ[ m ∈ apex′ ⇒ apex ] (β a ≡ α a ∘ m)
+      Σ[ m ∈ c ⇒ apex ] (β a ≡ α a ∘ m)
 
-module Equalizer where
+module Equalizer
+  {ℓ₁ ℓ₂}
+  {O : Set ℓ₁}
+  {_⇒_ : O → O → Set ℓ₂}
+  (cat : Category O _⇒_)
+  {a b : O}
+  (f g : a ⇒ b)
+  where
   open import Data.Product using (_,_)
 
   open Structures {{...}}
@@ -334,8 +344,8 @@ module Equalizer where
   assocᴵ gᴵ idᴵ idᴵ = refl
 
   instance
-    categoryI : Category I _⇒ᴵ_
-    categoryI = record
+    catᴵ : Category I _⇒ᴵ_
+    catᴵ = record
       { _∘_ = _∘ᴵ_
       ; id = idᴵ
       ; assoc = assocᴵ
@@ -343,19 +353,13 @@ module Equalizer where
       ; cancelRight = cancelRightᴵ
       }
 
-  D : ∀ {ℓ} {O : Set ℓ} → O → O → I → O
-  D a _ aᴵ = a
-  D _ b bᴵ = b
+  D : I → O
+  D aᴵ = a
+  D bᴵ = b
 
   instance
-    functorD : ∀ {ℓ₁ ℓ₂}
-      {O : Set ℓ₁} {_⇒_ : O → O → Set ℓ₂}
-      {a b : O}
-      (cat : Category O _⇒_)
-      (f g : a ⇒ b)
-      →
-      Functor categoryI cat (D a b)
-    functorD cat  f g = record
+    functorD : Functor catᴵ cat D
+    functorD = record
       { map = λ
         { {aᴵ} idᴵ → id
         ; {bᴵ} idᴵ → id
@@ -376,12 +380,83 @@ module Equalizer where
         }
       }
 
-  Equalizer : ∀
-    {ℓ₁ ℓ₂}
-    {O : Set ℓ₁} {_⇒_ : O → O → Set ℓ₂}
-    {a b : O}
-    (cat : Category O _⇒_)
-    (f g : a ⇒ b)
-    →
-    Set (ℓ₁ ⊔ ℓ₂)
-  Equalizer cat f g = Limit (functorD cat f g)
+  Equalizer : O → Set (ℓ₁ ⊔ ℓ₂)
+  Equalizer apex = Limit functorD apex
+
+module Pullback
+  {ℓ₁ ℓ₂}
+  {O : Set ℓ₁}
+  {_⇒_ : O → O → Set ℓ₂}
+  (cat : Category O _⇒_)
+  {a b c : O}
+  (f : a ⇒ b)
+  (g : c ⇒ b)
+  where
+  open import Data.Product using (_,_)
+  open Category cat
+
+  data I : Set where aᴵ bᴵ cᴵ : I
+
+  -- "this diagram is often called a span"
+  data _⇒ᴵ_ : I → I → Set where
+    idᴵ : ∀ {x} → x ⇒ᴵ x
+    fᴵ : aᴵ ⇒ᴵ bᴵ
+    gᴵ : cᴵ ⇒ᴵ bᴵ
+
+  _∘ᴵ_ : ∀ {x y z} → (y ⇒ᴵ z) → (x ⇒ᴵ y) → (x ⇒ᴵ z)
+  h ∘ᴵ idᴵ = h
+  idᴵ ∘ᴵ h = h
+
+  instance
+    catᴵ : Category I _⇒ᴵ_
+    catᴵ = record
+      { _∘_ = _∘ᴵ_
+      ; id = idᴵ
+      ; assoc = λ
+          { {aᴵ} h g idᴵ → refl
+          ; {bᴵ} h g idᴵ → refl
+          ; {cᴵ} h g idᴵ → refl
+          ; h idᴵ fᴵ → refl
+          ; h idᴵ gᴵ → refl
+          }
+      ; cancelLeft = λ
+          { {f = idᴵ} → refl
+          ; {f = fᴵ} → refl
+          ; {f = gᴵ} → refl
+          }
+      ; cancelRight = λ
+          { {f = idᴵ} → refl
+          ; {f = fᴵ} → refl
+          ; {f = gᴵ} → refl
+          }
+      }
+
+  D : I → O
+  D aᴵ = a
+  D bᴵ = b
+  D cᴵ = c
+
+  instance
+    functorD : Functor catᴵ cat D
+    functorD = record
+      { map = λ
+          { {aᴵ} idᴵ → id
+          ; {bᴵ} idᴵ → id
+          ; {cᴵ} idᴵ → id
+          ; fᴵ → f
+          ; gᴵ → g
+          }
+      ; map-id = λ { {aᴵ} → refl ; {bᴵ} → refl ; {cᴵ} → refl }
+      ; map-∘ = λ
+          { {aᴵ} idᴵ idᴵ → sym cancelLeft
+          ; {bᴵ} idᴵ idᴵ → sym cancelLeft
+          ; {cᴵ} idᴵ idᴵ → sym cancelLeft
+          ; idᴵ fᴵ → sym cancelRight
+          ; idᴵ gᴵ → sym cancelRight
+          ; fᴵ idᴵ → sym cancelLeft
+          ; gᴵ idᴵ → sym cancelLeft
+          }
+      }
+
+  Pullback : O → Set (ℓ₁ ⊔ ℓ₂)
+  Pullback apex = Limit functorD apex

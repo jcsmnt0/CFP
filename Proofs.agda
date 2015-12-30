@@ -299,27 +299,21 @@ module UniversalProductIsALimit where
       {cat : Category O _⇒_}
       (universalProduct : UniversalProduct a b c)
       →
-      Limit (functorD cat a b)
+      Limit (functorD cat a b) c
     fromUniversalProduct {c = c} {cat = cat} universalProduct = record
       { cone = record
-        { apex = c
-          ; naturalTransformation = record
-            { α = λ
-              { {aᴵ} → fst
-              ; {bᴵ} → snd
-              }
-            ; naturality = λ
+        { α = λ
+          { {aᴵ} → fst
+          ; {bᴵ} → snd
+          }
+        ; naturalTransformation = record
+            { naturality = λ
               { {aᴵ} idᴵ → trans cancelRight (sym cancelLeft)
               ; {bᴵ} idᴵ → trans cancelRight (sym cancelLeft)
               }
             }
           }
-      ; factor = λ nt →
-          let
-            open NaturalTransformation nt renaming (α to β)
-            m , (p , q) = factor (β aᴵ) (β bᴵ)
-          in
-            λ { aᴵ → m , p ; bᴵ → m , q }
+      ; factor = λ β nt → let m , (p , q) = factor (β aᴵ) (β bᴵ) in λ { aᴵ → m , p ; bᴵ → m , q }
       }
       where
         open Category cat
