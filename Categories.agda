@@ -100,21 +100,6 @@ module Structures {ℓ₁ ℓ₂} {O : Set ℓ₁} {_⇒_ : O → O → Set ℓ�
       coproduct : Coproduct a b c
       factor : ∀ {c′} → (p : a ⇒ c′) → (q : b ⇒ c′) → ∃ λ m → (p ≡ m ∘ left) × (q ≡ m ∘ right)
 
-  record Endofunctor (F : O → O) : Set (ℓ₁ ⊔ ℓ₂) where
-    field
-      map : ∀ {a b} → (a ⇒ b) → (F a ⇒ F b)
-      map-id : ∀ {a} → map (id {a}) ≡ id
-      map-∘ : ∀ {a b c} → (f : a ⇒ b) → (g : b ⇒ c) → map (g ∘ f) ≡ map g ∘ map f
-
-  module Endobifunctor where
-    open Endofunctor {{...}}
-
-    record FromEndofunctors (F : O → O → O) : Set (ℓ₁ ⊔ ℓ₂) where
-      field
-        endofunctorᴸ : ∀ {b} → Endofunctor (λ a → F a b)
-        endofunctorᴿ : ∀ {a} → Endofunctor (λ b → F a b)
-        mapCommutes : ∀ {a b c d} {f : a ⇒ b} {g : c ⇒ d} → map {{endofunctorᴸ}} f ∘ map g ≡ map g ∘ map f
-
 record Functor {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
     {O : Set ℓ₁} {Oᶠ : Set ℓ₃}
     {_⇒_ : O → O → Set ℓ₂} {_⇒ᶠ_ : Oᶠ → Oᶠ → Set ℓ₄}
@@ -130,12 +115,23 @@ record Functor {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
     map-id : ∀ {a} → map (id {a}) ≡ idᶠ
     map-∘ : ∀ {a b c} → (f : a ⇒ b) → (g : b ⇒ c) → map (g ∘ f) ≡ map g ∘ᶠ map f
 
+Endofunctor : ∀
+  {ℓ₁ ℓ₂}
+  {O : Set ℓ₁} {_⇒_ : O → O → Set ℓ₂}
+  (cat : Category O _⇒_)
+  (F : O → O)
+  →
+  Set (ℓ₁ ⊔ ℓ₂)
+Endofunctor cat F = Functor cat cat F
+
 -- constant functor
-Δ : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
+Δ : ∀
+  {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
   {O : Set ℓ₁} {Oᶠ : Set ℓ₃}
   {_⇒_ : O → O → Set ℓ₂} {_⇒ᶠ_ : Oᶠ → Oᶠ → Set ℓ₄}
   (cat : Category O _⇒_) (catᶠ : Category Oᶠ _⇒ᶠ_)
-  (c : Oᶠ) →
+  (c : Oᶠ)
+  →
   Functor cat catᶠ (const c)
 Δ cat catᶠ c = record
   { map = const id
@@ -149,12 +145,14 @@ module Bifunctor where
   open Functor {{...}}
   open Category {{...}}
 
-  record FromFunctors {ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅ ℓ₆}
-      {Oᴸ : Set ℓ₁} {Oᴿ : Set ℓ₂} {Oᶠ : Set ℓ₃}
-      {_⇒ᴸ_ : Oᴸ → Oᴸ → Set ℓ₄} {_⇒ᴿ_ : Oᴿ → Oᴿ → Set ℓ₅} {_⇒ᶠ_ : Oᶠ → Oᶠ → Set ℓ₆}
-      (catᴸ : Category Oᴸ _⇒ᴸ_) (catᴿ : Category Oᴿ _⇒ᴿ_) (catᶠ : Category Oᶠ _⇒ᶠ_)
-      (F : Oᴸ → Oᴿ → Oᶠ)
-      : Set (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ ⊔ ℓ₄ ⊔ ℓ₅ ⊔ ℓ₆) where
+  record FromFunctors
+    {ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅ ℓ₆}
+    {Oᴸ : Set ℓ₁} {Oᴿ : Set ℓ₂} {Oᶠ : Set ℓ₃}
+    {_⇒ᴸ_ : Oᴸ → Oᴸ → Set ℓ₄} {_⇒ᴿ_ : Oᴿ → Oᴿ → Set ℓ₅} {_⇒ᶠ_ : Oᶠ → Oᶠ → Set ℓ₆}
+    (catᴸ : Category Oᴸ _⇒ᴸ_) (catᴿ : Category Oᴿ _⇒ᴿ_) (catᶠ : Category Oᶠ _⇒ᶠ_)
+    (F : Oᴸ → Oᴿ → Oᶠ)
+    :
+    Set (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ ⊔ ℓ₄ ⊔ ℓ₅ ⊔ ℓ₆) where
 
     field
       functorᴸ : ∀ {b} → Functor catᴸ catᶠ (λ a → F a b)
@@ -176,9 +174,15 @@ module Bifunctor where
     bimap-id : ∀ {a : Oᴸ} {b : Oᴿ} → bimap (id {a = a}) (id {a = b}) ≡ id
     bimap-id {a} {b} = trans (cong-∘ map-id map-id) cancelLeft
 
-    bimap-∘ : ∀ {a b c x y z} → (f : a ⇒ᴸ b) → (g : b ⇒ᴸ c) → (h : x ⇒ᴿ y) → (i : y ⇒ᴿ z) → bimap (g ∘ f) (i ∘ h) ≡ bimap g i ∘ bimap f h
+    bimap-∘ : ∀
+      {a b c x y z}
+      (f : a ⇒ᴸ b)
+      (g : b ⇒ᴸ c)
+      (h : x ⇒ᴿ y)
+      (i : y ⇒ᴿ z)
+      →
+      bimap (g ∘ f) (i ∘ h) ≡ bimap g i ∘ bimap f h
     bimap-∘ f g h i =
-      -- this might be cleaner taken from the other angle
       begin
         map (g ∘ f) ∘ map (i ∘ h)
       ≡⟨ cong-∘ (map-∘ f g) (map-∘ h i) ⟩
@@ -195,12 +199,14 @@ module Bifunctor where
         (map g ∘ map i) ∘ (map f ∘ map h)
       ∎
 
-  record FromBimap {ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅ ℓ₆}
-      {Oᴸ : Set ℓ₁} {Oᴿ : Set ℓ₂} {Oᶠ : Set ℓ₃}
-      {_⇒ᴸ_ : Oᴸ → Oᴸ → Set ℓ₄} {_⇒ᴿ_ : Oᴿ → Oᴿ → Set ℓ₅} {_⇒ᶠ_ : Oᶠ → Oᶠ → Set ℓ₆}
-      (catᴸ : Category Oᴸ _⇒ᴸ_) (catᴿ : Category Oᴿ _⇒ᴿ_) (catᶠ : Category Oᶠ _⇒ᶠ_)
-      (F : Oᴸ → Oᴿ → Oᶠ)
-      : Set (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ ⊔ ℓ₄ ⊔ ℓ₅ ⊔ ℓ₆) where
+  record FromBimap
+    {ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅ ℓ₆}
+    {Oᴸ : Set ℓ₁} {Oᴿ : Set ℓ₂} {Oᶠ : Set ℓ₃}
+    {_⇒ᴸ_ : Oᴸ → Oᴸ → Set ℓ₄} {_⇒ᴿ_ : Oᴿ → Oᴿ → Set ℓ₅} {_⇒ᶠ_ : Oᶠ → Oᶠ → Set ℓ₆}
+    (catᴸ : Category Oᴸ _⇒ᴸ_) (catᴿ : Category Oᴿ _⇒ᴿ_) (catᶠ : Category Oᶠ _⇒ᶠ_)
+    (F : Oᴸ → Oᴿ → Oᶠ)
+    :
+    Set (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ ⊔ ℓ₄ ⊔ ℓ₅ ⊔ ℓ₆) where
 
     field
       bimap : ∀ {a b c d} → (a ⇒ᴸ b) → (c ⇒ᴿ d) → (F a c ⇒ᶠ F b d)
@@ -239,6 +245,25 @@ module Bifunctor where
             bimap id g ∘ bimap id f
           ∎
       }
+
+module Endobifunctor where
+  FromEndofunctors : ∀
+    {ℓ₁ ℓ₂}
+    {O : Set ℓ₁} {_⇒_ : O → O → Set ℓ₂}
+    (cat : Category O _⇒_)
+    (F : O → O → O)
+    →
+    Set (ℓ₁ ⊔ ℓ₂)
+  FromEndofunctors cat F = Bifunctor.FromFunctors cat cat cat F
+
+  FromBimap : ∀
+    {ℓ₁ ℓ₂}
+    {O : Set ℓ₁} {_⇒_ : O → O → Set ℓ₂}
+    (cat : Category O _⇒_)
+    (F : O → O → O)
+    →
+    Set (ℓ₁ ⊔ ℓ₂)
+  FromBimap cat F = Bifunctor.FromBimap cat cat cat F
 
 record NaturalTransformation {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
     {O : Set ℓ₁} {Oᵅ : Set ℓ₂}

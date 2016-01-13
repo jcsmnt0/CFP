@@ -4,29 +4,8 @@ open import Level
 open import Relation.Binary.PropositionalEquality
 open ≡-Reasoning
 
+open import Axioms
 open import Categories
-
-K : ∀ {ℓ} {a : Set ℓ} {x y : a} {p q : x ≡ y} → p ≡ q
-K {p = refl} {q = refl} = refl
-
-postulate
-  ext : ∀
-    {ℓ₁ ℓ₂}
-    {a : Set ℓ₁}
-    {b : a → Set ℓ₂}
-    {f g : (x : a) → b x}
-    (p : ∀ x → f x ≡ g x)
-    →
-    f ≡ g
-
-  ext-implicit : ∀
-    {ℓ₁ ℓ₂}
-    {a : Set ℓ₁}
-    {b : a → Set ℓ₂}
-    {f g : ∀ {x} → b x}
-    (p : ∀ x → f {x} ≡ g {x})
-    →
-    (λ {x} → f {x}) ≡ g
 
 cancelDoubleDual : ∀
   {ℓ₁ ℓ₂}
@@ -35,15 +14,15 @@ cancelDoubleDual : ∀
   → Category.op (Category.op cat) ≡ cat
 cancelDoubleDual {O = O} {_⇒_ = _⇒_} (category _∘_ id assoc cancelLeft cancelRight) =
   cong
-    (λ (x : ∀ {a b c d} (h : _⇒_ c d) (g : _⇒_ b c) (f : _⇒_ a b) → _∘_ h (_∘_ g f) ≡ _∘_ (_∘_ h g) f)
-      → category _∘_ id x cancelLeft cancelRight)
-    (ext-implicit λ a →
-      ext-implicit λ b →
-        ext-implicit λ c →
-          ext-implicit λ d →
-            ext λ h →
-              ext λ g →
-                ext λ f → K)
+    (λ (assoc′ : ∀ {a b c d} (h : c ⇒ d) (g : b ⇒ c) (f : a ⇒ b) → h ∘ (g ∘ f) ≡ (h ∘ g) ∘ f)
+      → category _∘_ id assoc′ cancelLeft cancelRight)
+    (ext-implicit λ _ →
+      ext-implicit λ _ →
+        ext-implicit λ _ →
+          ext-implicit λ _ →
+            ext λ _ →
+              ext λ _ →
+                ext λ _ → K)
 
 module Endo {ℓ₁ ℓ₂} {O : Set ℓ₁} {_⇒_ : O → O → Set ℓ₂} (cat : Category O _⇒_) where
   open Category cat
@@ -466,4 +445,3 @@ record InitialObjectPushoutCoproduct
          (universalProductDualOfUniversalCoproduct terminalObjectPullback-UniversalProduct)
       where
         open Endo.Product op
-

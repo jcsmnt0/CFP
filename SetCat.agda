@@ -4,13 +4,8 @@ open import Data.Product using (_,_; _,′_; _×_)
 open import Level
 open import Relation.Binary.PropositionalEquality
 
+open import Axioms
 open import Categories
-
-postulate
-  ext : ∀ {ℓ₁ ℓ₂} {a : Set ℓ₁} {b : a → Set ℓ₂} {f g : (x : a) → b x} → (∀ x → f x ≡ g x) → f ≡ g
-
-_$$_ : ∀ {ℓ₁ ℓ₂} {a : Set ℓ₁} {b : a → Set ℓ₂} {f g : (x : a) → b x} → f ≡ g → ∀ x → f x ≡ g x
-refl $$ _ = refl
 
 infixr 1 _⇒_
 _⇒_ : ∀ {ℓ₁ ℓ₂} → Set ℓ₁ → Set ℓ₂ → Set (ℓ₁ ⊔ ℓ₂)
@@ -48,7 +43,7 @@ module ⊤-TerminalObject where
       ; uniqueness = ext λ _ → refl
       }
 
-module ×-Product {ℓ} where
+module ×-Product ℓ where
   open import Data.Product
   open Category (setCategory ℓ)
   open Structures (setCategory ℓ)
@@ -67,7 +62,7 @@ module ×-Product {ℓ} where
       ; factor = λ p′ q′ → < p′ , q′ > , refl ,′ refl
       }
 
-module ⊎-Coproduct {ℓ} where
+module ⊎-Coproduct ℓ where
   open import Data.Sum
   open Category (setCategory ℓ)
   open Structures (setCategory ℓ)
@@ -85,7 +80,7 @@ module ⊎-Coproduct {ℓ} where
       ; factor = λ i′ j′ → [ i′ , j′ ]′ , refl ,′ refl
       }
 
-module MaybeEndofunctor {ℓ} where
+module MaybeEndofunctor ℓ where
   open import Data.Maybe
   open Category (setCategory ℓ)
   open Structures (setCategory ℓ)
@@ -99,14 +94,14 @@ module MaybeEndofunctor {ℓ} where
   map-∘ f g nothing = refl
 
   instance
-    MaybeEndofunctor : Endofunctor Maybe
+    MaybeEndofunctor : Endofunctor (setCategory ℓ) Maybe
     MaybeEndofunctor = record
       { map = map
       ; map-id = ext map-id
       ; map-∘ = λ f g → ext (map-∘ f g)
       }
 
-module ListEndofunctor {ℓ} where
+module ListEndofunctor ℓ where
   open import Data.List
   open Category (setCategory ℓ)
   open Structures (setCategory ℓ)
@@ -120,31 +115,31 @@ module ListEndofunctor {ℓ} where
   map-∘ f g (x ∷ xs) rewrite map-∘ f g xs = refl
 
   instance
-    ListEndofunctor : Endofunctor List
+    ListEndofunctor : Endofunctor (setCategory ℓ) List
     ListEndofunctor = record
       { map = map
       ; map-id = ext map-id
       ; map-∘ = λ f g → ext (map-∘ f g)
       }
 
-module ReaderEndofunctor {ℓ} where
+module ReaderEndofunctor ℓ where
   open Category (setCategory ℓ)
   open Structures (setCategory ℓ)
 
   instance
-    ReaderEndofunctor : (a : Set ℓ) → Endofunctor (λ b → (a ⇒ b))
+    ReaderEndofunctor : (a : Set ℓ) → Endofunctor (setCategory ℓ) (λ b → (a ⇒ b))
     ReaderEndofunctor a = record
       { map = _∘_
       ; map-id = refl
       ; map-∘ = λ _ _ → refl
       }
 
-module ×-Endobifunctor {ℓ} where
+module ×-Endobifunctor ℓ where
   open Category (setCategory ℓ)
   open Structures (setCategory ℓ)
 
   instance
-    ×-Endofunctorᴸ : {b : Set ℓ} → Endofunctor (λ a → a × b)
+    ×-Endofunctorᴸ : {b : Set ℓ} → Endofunctor (setCategory ℓ) (λ a → a × b)
     ×-Endofunctorᴸ = record
       { map = λ { f (x , y) → f x , y }
       ; map-id = refl
@@ -152,7 +147,7 @@ module ×-Endobifunctor {ℓ} where
       }
 
   instance
-    ×-Endofunctorᴿ : {a : Set ℓ} → Endofunctor (λ b → a × b)
+    ×-Endofunctorᴿ : {a : Set ℓ} → Endofunctor (setCategory ℓ) (λ b → a × b)
     ×-Endofunctorᴿ = record
       { map = λ { f (x , y) → x , f y }
       ; map-id = refl
@@ -160,20 +155,20 @@ module ×-Endobifunctor {ℓ} where
       }
 
   instance
-    ×-Endobifunctor : Endobifunctor.FromEndofunctors _×_
+    ×-Endobifunctor : Endobifunctor.FromEndofunctors (setCategory ℓ) _×_
     ×-Endobifunctor = record
-      { endofunctorᴸ = ×-Endofunctorᴸ
-      ; endofunctorᴿ = ×-Endofunctorᴿ
+      { functorᴸ = ×-Endofunctorᴸ
+      ; functorᴿ = ×-Endofunctorᴿ
       ; mapCommutes = ext λ _ → refl
       }
 
-module ⊎-Endobifunctor {ℓ} where
+module ⊎-Endobifunctor ℓ where
   open import Data.Sum
   open Category (setCategory ℓ)
   open Structures (setCategory ℓ)
 
   instance
-    ⊎-Endofunctorᴸ : {b : Set ℓ} → Endofunctor (λ a → a ⊎ b)
+    ⊎-Endofunctorᴸ : {b : Set ℓ} → Endofunctor (setCategory ℓ) (λ a → a ⊎ b)
     ⊎-Endofunctorᴸ = record
       { map = λ { f (inj₁ x) → inj₁ (f x); f (inj₂ y) → inj₂ y }
       ; map-id = ext λ { (inj₁ _) → refl; (inj₂ _) → refl }
@@ -181,7 +176,7 @@ module ⊎-Endobifunctor {ℓ} where
       }
 
   instance
-    ⊎-Endofunctorᴿ : {a : Set ℓ} → Endofunctor (λ b → a ⊎ b)
+    ⊎-Endofunctorᴿ : {a : Set ℓ} → Endofunctor (setCategory ℓ) (λ b → a ⊎ b)
     ⊎-Endofunctorᴿ = record
       { map = λ { f (inj₁ x) → inj₁ x; f (inj₂ y) → inj₂ (f y) }
       ; map-id = ext λ { (inj₁ _) → refl; (inj₂ _) → refl }
@@ -189,10 +184,10 @@ module ⊎-Endobifunctor {ℓ} where
       }
 
   instance
-    ⊎-Endobifunctor : Endobifunctor.FromEndofunctors _⊎_
+    ⊎-Endobifunctor : Endobifunctor.FromEndofunctors (setCategory ℓ) _⊎_
     ⊎-Endobifunctor = record
-      { endofunctorᴸ = ⊎-Endofunctorᴸ
-      ; endofunctorᴿ = ⊎-Endofunctorᴿ
+      { functorᴸ = ⊎-Endofunctorᴸ
+      ; functorᴿ = ⊎-Endofunctorᴿ
       ; mapCommutes = ext λ { (inj₁ _) → refl ; (inj₂ _) → refl }
       }
 
