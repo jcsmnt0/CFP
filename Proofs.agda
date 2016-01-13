@@ -417,7 +417,6 @@ record TerminalObjectPullbackProduct
                 }
               }
 
-            -- it seems like factorizers should be unique, since
             (m , p) = factor β nt
           in
             m , p aᴵ ,′ p cᴵ
