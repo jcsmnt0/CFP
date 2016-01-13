@@ -223,12 +223,11 @@ module DependentPairEqualizer {ℓ} {a b : Set ℓ} (f g : a ⇒ b) where
    {c}
    (β : ∀ x → const c x ⇒ D x)
    (nt : NaturalTransformation (Δ catᴵ (setCategory ℓ) c) functorD β)
-   (a : I)
    →
-   ∃ λ m → (β a ≡ α a ∘ m)
-  factor β nt = λ
-    { aᴵ → ((λ x → (β aᴵ x , trans (sym (naturalityᵝ fᴵ $$ x)) (naturalityᵝ gᴵ $$ x))) , refl)
-    ; bᴵ → ((λ x → (β aᴵ x , trans (sym (naturalityᵝ fᴵ $$ x)) (naturalityᵝ gᴵ $$ x))) , naturalityᵝ fᴵ)
+   ∃ λ m → (∀ a → β a ≡ α a ∘ m)
+  factor β nt = (λ x → β aᴵ x , trans (sym (naturalityᵝ fᴵ $$ x)) (naturalityᵝ gᴵ $$ x)) , λ
+    { aᴵ → refl
+    ; bᴵ → naturalityᵝ fᴵ
     }
     where open NaturalTransformation nt renaming (naturality to naturalityᵝ)
 
@@ -268,13 +267,12 @@ module ProductPullback {ℓ} {a b c : Set ℓ} (f : a → b) (g : c → b) where
     {c}
     (β : ∀ x → const c x ⇒ D x)
     (nt : NaturalTransformation (Δ catᴵ (setCategory ℓ) c) functorD β)
-    (a : I)
     →
-    ∃ λ m → (β a ≡ α a ∘ m)
-  factor β nt = λ
-    { aᴵ → ((λ x → (β aᴵ x , β cᴵ x) , trans (sym (naturalityᵝ fᴵ $$ x)) (naturalityᵝ gᴵ $$ x)) , refl)
-    ; bᴵ → ((λ x → (β aᴵ x , β cᴵ x) , trans (sym (naturalityᵝ fᴵ $$ x)) (naturalityᵝ gᴵ $$ x)) , naturalityᵝ fᴵ)
-    ; cᴵ → ((λ x → (β aᴵ x , β cᴵ x) , trans (sym (naturalityᵝ fᴵ $$ x)) (naturalityᵝ gᴵ $$ x)) , refl)
+    ∃ λ m → (∀ a → β a ≡ α a ∘ m)
+  factor β nt = (λ x → (((β aᴵ x) , (β cᴵ x)) , trans (sym (naturalityᵝ fᴵ $$ x)) (naturalityᵝ gᴵ $$ x))) , λ
+    { aᴵ → refl
+    ; bᴵ → naturalityᵝ fᴵ
+    ; cᴵ → refl
     }
     where open NaturalTransformation nt renaming (naturality to naturalityᵝ)
 

@@ -10,6 +10,7 @@ open import Relation.Nullary
 open ≡-Reasoning
 
 record Category {ℓ₁ ℓ₂} (O : Set ℓ₁) (_⇒_ : O → O → Set ℓ₂) : Set (ℓ₁ ⊔ ℓ₂) where
+  constructor category
   infixr 4 _∘_
 
   field
@@ -254,7 +255,8 @@ record NaturalTransformation {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
   field
     naturality : ∀ {a b} (f : a ⇒ b) → α b ∘ mapᶠ f ≡ mapᵍ f ∘ α a
 
-record Cone {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
+record Cone
+    {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
     {O : Set ℓ₁} {Oᴵ : Set ℓ₂}
     {_⇒_ : O → O → Set ℓ₃} {_⇒ᴵ_ : Oᴵ → Oᴵ → Set ℓ₄}
     {cat : Category O _⇒_} {catᴵ : Category Oᴵ _⇒ᴵ_}
@@ -270,6 +272,23 @@ record Cone {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
     α : ∀ a → const apex a ⇒ D a
     naturalTransformation : NaturalTransformation (Δ catᴵ cat apex) functorD α
 
+record Cocone
+    {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
+    {O : Set ℓ₁} {Oᴵ : Set ℓ₂}
+    {_⇒_ : O → O → Set ℓ₃} {_⇒ᴵ_ : Oᴵ → Oᴵ → Set ℓ₄}
+    {cat : Category O _⇒_} {catᴵ : Category Oᴵ _⇒ᴵ_}
+    {D : Oᴵ → O}
+    (functorD : Functor catᴵ cat D)
+    (apex : O) -- coapex?
+    :
+    Set (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ ⊔ ℓ₄) where
+  open Category {{...}}
+  open NaturalTransformation {{...}}
+
+  field
+    α : ∀ a → D a ⇒ const apex a
+    naturalTransformation : NaturalTransformation functorD (Δ catᴵ cat apex) α
+
 -- aka universal cone
 record Limit
     {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
@@ -281,31 +300,52 @@ record Limit
     (apex : O)
     :
     Set (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ ⊔ ℓ₄) where
-  open Category {{...}}
-
   field
     cone : Cone functorD apex
 
+  open Category cat
   open Cone cone
-  open NaturalTransformation naturalTransformation
 
   field
     factor :
       {c : O}
       (β : ∀ a → const c a ⇒ D a)
       (nt : NaturalTransformation (Δ catᴵ cat c) functorD β)
+      →
+      Σ[ m ∈ c ⇒ apex ] (∀ a → β a ≡ α a ∘ m)
+
+record Colimit
+    {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
+    {O : Set ℓ₁} {Oᴵ : Set ℓ₂}
+    {_⇒_ : O → O → Set ℓ₃} {_⇒ᴵ_ : Oᴵ → Oᴵ → Set ℓ₄}
+    {cat : Category O _⇒_} {catᴵ : Category Oᴵ _⇒ᴵ_}
+    {D : Oᴵ → O}
+    (functorD : Functor catᴵ cat D)
+    (apex : O)
+    :
+    Set (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ ⊔ ℓ₄) where
+  field
+    cocone : Cocone functorD apex
+
+  open Category cat
+  open Cocone cocone
+
+  field
+    factor :
+      {c : O}
+      (β : ∀ a → D a ⇒ const c a)
+      (nt : NaturalTransformation functorD (Δ catᴵ cat c) β)
       (a : Oᴵ)
       →
-      Σ[ m ∈ c ⇒ apex ] (β a ≡ α a ∘ m)
+      ∃ λ m → β a ≡ m ∘ α a
 
 module Equalizer
-  {ℓ₁ ℓ₂}
-  {O : Set ℓ₁}
-  {_⇒_ : O → O → Set ℓ₂}
-  (cat : Category O _⇒_)
-  {a b : O}
-  (f g : a ⇒ b)
-  where
+    {ℓ₁ ℓ₂}
+    {O : Set ℓ₁}
+    {_⇒_ : O → O → Set ℓ₂}
+    (cat : Category O _⇒_)
+    {a b : O}
+    (f g : a ⇒ b) where
   open import Data.Product using (_,_)
 
   open Structures {{...}}
@@ -384,14 +424,13 @@ module Equalizer
   Equalizer apex = Limit functorD apex
 
 module Pullback
-  {ℓ₁ ℓ₂}
-  {O : Set ℓ₁}
-  {_⇒_ : O → O → Set ℓ₂}
-  (cat : Category O _⇒_)
-  {a b c : O}
-  (f : a ⇒ b)
-  (g : c ⇒ b)
-  where
+    {ℓ₁ ℓ₂}
+    {O : Set ℓ₁}
+    {_⇒_ : O → O → Set ℓ₂}
+    (cat : Category O _⇒_)
+    {a b c : O}
+    (f : a ⇒ b)
+    (g : c ⇒ b) where
   open import Data.Product using (_,_)
   open Category cat
 
@@ -460,3 +499,16 @@ module Pullback
 
   Pullback : O → Set (ℓ₁ ⊔ ℓ₂)
   Pullback apex = Limit functorD apex
+
+module Pushout
+    {ℓ₁ ℓ₂}
+    {O : Set ℓ₁}
+    {_⇒_ : O → O → Set ℓ₂}
+    (cat : Category O _⇒_)
+    {a b c : O}
+    (f : b ⇒ a)
+    (g : b ⇒ c) where
+  open Pullback (Category.op cat) f g
+
+  Pushout : O → Set (ℓ₁ ⊔ ℓ₂)
+  Pushout = Pullback

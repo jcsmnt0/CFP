@@ -6,6 +6,45 @@ open ≡-Reasoning
 
 open import Categories
 
+K : ∀ {ℓ} {a : Set ℓ} {x y : a} {p q : x ≡ y} → p ≡ q
+K {p = refl} {q = refl} = refl
+
+postulate
+  ext : ∀
+    {ℓ₁ ℓ₂}
+    {a : Set ℓ₁}
+    {b : a → Set ℓ₂}
+    {f g : (x : a) → b x}
+    (p : ∀ x → f x ≡ g x)
+    →
+    f ≡ g
+
+  ext-implicit : ∀
+    {ℓ₁ ℓ₂}
+    {a : Set ℓ₁}
+    {b : a → Set ℓ₂}
+    {f g : ∀ {x} → b x}
+    (p : ∀ x → f {x} ≡ g {x})
+    →
+    (λ {x} → f {x}) ≡ g
+
+cancelDoubleDual : ∀
+  {ℓ₁ ℓ₂}
+  {O : Set ℓ₁} {_⇒_ : O → O → Set ℓ₂}
+  (cat : Category O _⇒_)
+  → Category.op (Category.op cat) ≡ cat
+cancelDoubleDual {O = O} {_⇒_ = _⇒_} (category _∘_ id assoc cancelLeft cancelRight) =
+  cong
+    (λ (x : ∀ {a b c d} (h : _⇒_ c d) (g : _⇒_ b c) (f : _⇒_ a b) → _∘_ h (_∘_ g f) ≡ _∘_ (_∘_ h g) f)
+      → category _∘_ id x cancelLeft cancelRight)
+    (ext-implicit λ a →
+      ext-implicit λ b →
+        ext-implicit λ c →
+          ext-implicit λ d →
+            ext λ h →
+              ext λ g →
+                ext λ f → K)
+
 module Endo {ℓ₁ ℓ₂} {O : Set ℓ₁} {_⇒_ : O → O → Set ℓ₂} (cat : Category O _⇒_) where
   open Category cat
 
@@ -313,7 +352,7 @@ module UniversalProductIsALimit where
               }
             }
           }
-      ; factor = λ β nt → let m , (p , q) = factor (β aᴵ) (β bᴵ) in λ { aᴵ → m , p ; bᴵ → m , q }
+      ; factor = λ β nt → let m , (p , q) = factor (β aᴵ) (β bᴵ) in m , λ { aᴵ → p ; bᴵ → q }
       }
       where
         open Category cat
@@ -322,3 +361,110 @@ module UniversalProductIsALimit where
         factor = UniversalProduct.factor universalProduct
         fst = Product.fst product
         snd = Product.snd product
+
+open import Data.Product using (_,_; _,′_; proj₁; proj₂)
+open import Data.Unit
+open import Function using (const)
+
+record TerminalObjectPullbackProduct
+    {ℓ₁ ℓ₂}
+    {O : Set ℓ₁} {_⇒_ : O → O → Set ℓ₂}
+    (cat : Category O _⇒_)
+    {a b : O}
+    (c : O)
+    (⊤ : O)
+    (f : a ⇒ ⊤)
+    (g : b ⇒ ⊤)
+    :
+    Set (ℓ₁ ⊔ ℓ₂) where
+  open Category cat
+  open Structures cat
+  open Pullback cat f g renaming (Pullback to Pullbackᶠᵍ)
+
+  field
+    pullback : Pullbackᶠᵍ c
+    terminalObject : TerminalObject ⊤
+
+  open Limit pullback
+  open Cone cone
+  open NaturalTransformation naturalTransformation
+  open TerminalObject terminalObject
+
+  instance
+    terminalObjectPullback-UniversalProduct : UniversalProduct a b c
+    terminalObjectPullback-UniversalProduct = record
+      { product = record
+        { fst = α aᴵ
+        ; snd = α cᴵ
+        }
+      ; factor = λ {c′} p q →
+          let
+            β : ∀ x → const c′ x ⇒ D x
+            β = λ
+              { aᴵ → p
+              ; bᴵ → terminal
+              ; cᴵ → q
+              }
+
+            nt : NaturalTransformation (Δ catᴵ cat c′) functorD β
+            nt = record
+              { naturality = λ
+                { {aᴵ} idᴵ → trans cancelRight (sym cancelLeft)
+                ; {bᴵ} idᴵ → trans cancelRight (sym cancelLeft)
+                ; {cᴵ} idᴵ → trans cancelRight (sym cancelLeft)
+                ; fᴵ → trans cancelRight (sym uniqueness)
+                ; gᴵ → trans cancelRight (sym uniqueness)
+                }
+              }
+
+            -- it seems like factorizers should be unique, since
+            (m , p) = factor β nt
+          in
+            m , p aᴵ ,′ p cᴵ
+      }
+
+record InitialObjectPushoutCoproduct
+    {ℓ₁ ℓ₂}
+    {O : Set ℓ₁} {_⇒_ : O → O → Set ℓ₂}
+    (cat : Category O _⇒_)
+    {a b : O}
+    (c : O)
+    (⊥ : O)
+    (f : ⊥ ⇒ a)
+    (g : ⊥ ⇒ b)
+    :
+    Set (ℓ₁ ⊔ ℓ₂) where
+  open Category cat
+  open Structures cat
+  open Pushout cat f g renaming (Pushout to Pushoutᶠᵍ)
+
+  field
+    pushout : Pushoutᶠᵍ c
+    initialObject : InitialObject ⊥
+
+  open Limit pushout
+  open Cone cone
+  open NaturalTransformation naturalTransformation
+  open InitialObject initialObject
+
+  co-pullback : TerminalObjectPullbackProduct op c ⊥ f g
+  co-pullback = record
+    { pullback = pushout
+    ; terminalObject = initialObjectDualOfTerminalObject initialObject
+    }
+    where
+      open Endo.Initial cat
+      open Endo.Product cat
+
+  open TerminalObjectPullbackProduct co-pullback
+
+  instance
+    initialObjectPushout-UniversalCoproduct : UniversalCoproduct a b c
+    initialObjectPushout-UniversalCoproduct =
+       subst
+         (λ x → Structures.UniversalCoproduct x a b c)
+         (cancelDoubleDual cat)
+         (universalProductDualOfUniversalCoproduct terminalObjectPullback-UniversalProduct)
+      where
+        open Endo.Product op
+
