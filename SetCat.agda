@@ -288,9 +288,9 @@ module HomFunctor {ℓ₁ ℓ₂} {O : Set ℓ₁} {_⇒_ : O → O → Set ℓ�
     homFunctor = record
       { map = _∘_
       ; map-id = ext (λ _ → cancelLeft)
-      ; map-∘ = λ f g → ext (λ _ → sym (assoc _ _ _))
+      ; map-∘ = λ _ _ → ext (λ _ → sym (assoc _ _ _))
       }
-  
+
 Representable : ∀
   {ℓ₁ ℓ₂}
   {O : Set ℓ₁}

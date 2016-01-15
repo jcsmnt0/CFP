@@ -280,6 +280,8 @@ record NaturalTransformation
     (α : ∀ a → F a ⇒ᵅ G a)
     :
     Set (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ ⊔ ℓ₄) where
+  constructor NT
+
   open Category {{...}}
   open Functor functorF renaming (map to mapᶠ)
   open Functor functorG renaming (map to mapᵍ)
