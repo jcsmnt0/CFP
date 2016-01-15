@@ -16,13 +16,7 @@ cancelDoubleDual {O = O} {_⇒_ = _⇒_} (category _∘_ id assoc cancelLeft can
   cong
     (λ (assoc′ : ∀ {a b c d} (h : c ⇒ d) (g : b ⇒ c) (f : a ⇒ b) → h ∘ (g ∘ f) ≡ (h ∘ g) ∘ f)
       → category _∘_ id assoc′ cancelLeft cancelRight)
-    (ext-implicit λ _ →
-      ext-implicit λ _ →
-        ext-implicit λ _ →
-          ext-implicit λ _ →
-            ext λ _ →
-              ext λ _ →
-                ext λ _ → K)
+    (ext-implicit λ _ → ext-implicit λ _ → ext-implicit λ _ → ext-implicit λ _ → ext λ _ → ext λ _ → ext λ _ → K)
 
 module Endo {ℓ₁ ℓ₂} {O : Set ℓ₁} {_⇒_ : O → O → Set ℓ₂} (cat : Category O _⇒_) where
   open Category cat

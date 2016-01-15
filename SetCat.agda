@@ -1,7 +1,8 @@
 module SetCat where
 
+open import Data.Nat hiding (_⊔_)
 open import Data.Product using (_,_; _,′_; _×_)
-open import Level
+open import Level using (_⊔_)
 open import Relation.Binary.PropositionalEquality
 
 open import Axioms
@@ -23,8 +24,8 @@ instance
 
 module ⊥-InitialObject where
     open import Data.Empty
-    open Category (setCategory zero)
-    open Structures (setCategory zero)
+    open Category (setCategory Level.zero)
+    open Structures (setCategory Level.zero)
     instance
       ⊥-initial : InitialObject ⊥
       ⊥-initial = record
@@ -34,8 +35,8 @@ module ⊥-InitialObject where
 
 module ⊤-TerminalObject where
   open import Data.Unit
-  open Category (setCategory zero)
-  open Structures (setCategory zero)
+  open Category (setCategory Level.zero)
+  open Structures (setCategory Level.zero)
   instance
     ⊤-terminal : TerminalObject ⊤
     ⊤-terminal = record
@@ -276,4 +277,107 @@ module ProductPullback {ℓ} {a b c : Set ℓ} (f : a → b) (g : c → b) where
     ProdEq-Pullback = record
       { cone = record { naturalTransformation = record { naturality = naturality } }
       ; factor = factor
+      }
+
+module HomFunctor {ℓ₁ ℓ₂} {O : Set ℓ₁} {_⇒_ : O → O → Set ℓ₂} (cat : Category O _⇒_) (a : O) where
+  open Category cat
+  open Structures {{...}}
+
+  instance
+    homFunctor : Functor cat (setCategory ℓ₂) (HomSet a)
+    homFunctor = record
+      { map = _∘_
+      ; map-id = ext (λ _ → cancelLeft)
+      ; map-∘ = λ f g → ext (λ _ → sym (assoc _ _ _))
+      }
+  
+Representable : ∀
+  {ℓ₁ ℓ₂}
+  {O : Set ℓ₁}
+  {_⇒_ : O → O → Set ℓ₂}
+  {cat : Category O _⇒_}
+  {F : O → Set ℓ₂}
+  (functorF : Functor cat (setCategory ℓ₂) F)
+  {a : O}
+  (index : ∀ b → F b → (a ⇒ b))
+  (tabulate : ∀ b → (a ⇒ b) → F b)
+  →
+  Set _
+Representable {cat = cat} functorF {a = a} index tabulate = NaturalIsomorphism functorF homFunctor index tabulate
+  where
+    open HomFunctor cat a
+
+module VecFunctor (n : ℕ) where
+  open import Data.Fin
+  open import Data.Vec
+  open import Function
+
+  map-id : ∀ {ℓ m} {a : Set ℓ} (xs : Vec a m) → map id xs ≡ xs
+  map-id [] = refl
+  map-id (_ ∷ _) = cong (_∷_ _) (map-id _)
+
+  map-∘ : ∀ {ℓ m} {a b c : Set ℓ} (f : a → b) (g : b → c) (xs : Vec a m) → map (g ∘ f) xs ≡ map g (map f xs)
+  map-∘ _ _ [] = refl
+  map-∘ _ _ (_ ∷ _) = cong (_∷_ _) (map-∘ _ _ _)
+
+  instance
+    vecFunctor : ∀ {ℓ} → Endofunctor (setCategory ℓ) (λ a → Vec a n)
+    vecFunctor = record
+      { map = map
+      ; map-id = ext map-id
+      ; map-∘ = λ f g → ext (map-∘ f g)
+      }
+
+  mapCommutesOverLookup : ∀
+    {ℓ m}
+    {a b : Set ℓ}
+    {f : a → b}
+    (xs : Vec a m)
+    (i : Fin m)
+    →
+    lookup i (map f xs) ≡ f (lookup i xs)
+  mapCommutesOverLookup [] ()
+  mapCommutesOverLookup (_ ∷ _) zero = refl
+  mapCommutesOverLookup (_ ∷ _) (suc i) = mapCommutesOverLookup _ i
+
+  mapCommutesOverTabulate : ∀
+    {ℓ m}
+    {a b : Set ℓ}
+    (f : a → b)
+    (tab : Fin m → a)
+    →
+    tabulate (f ∘ tab) ≡ map f (tabulate tab)
+  mapCommutesOverTabulate {m = zero} _ tab = refl
+  mapCommutesOverTabulate {m = suc m} f tab = cong (_∷_ (f (tab zero))) (mapCommutesOverTabulate f (tab ∘ suc))
+
+  lookupTabulateCancel : ∀
+    {ℓ m}
+    {a : Set ℓ}
+    (tab : Fin m → a)
+    (i : Fin m)
+    →
+    lookup i (tabulate tab) ≡ tab i
+  lookupTabulateCancel tab zero = refl
+  lookupTabulateCancel tab (suc i) = lookupTabulateCancel (tab ∘ suc) i
+
+  tabulateLookupCancel : ∀
+    {ℓ m}
+    {a : Set ℓ}
+    (xs : Vec a m)
+    →
+    tabulate (flip lookup xs) ≡ xs
+  tabulateLookupCancel [] = refl
+  tabulateLookupCancel (_ ∷ _) = cong (_∷_ _) (tabulateLookupCancel _)
+
+  instance
+    vecRepresentable : Representable vecFunctor (λ _ → flip lookup) (λ _ → tabulate)
+    vecRepresentable = record
+      { right = record
+        { naturality = λ _ → ext λ i → ext λ xs → mapCommutesOverLookup i xs
+        }
+      ; left = record
+        { naturality = λ f → ext (mapCommutesOverTabulate f)
+        }
+      ; leftId = λ _ → ext λ tab → ext (lookupTabulateCancel tab)
+      ; rightId = λ _ → ext tabulateLookupCancel
       }

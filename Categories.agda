@@ -63,6 +63,9 @@ record Category {ℓ₁ ℓ₂} (O : Set ℓ₁) (_⇒_ : O → O → Set ℓ₂
       rightInverse : right ∘ left ≡ id
       leftInverse : left ∘ right ≡ id
 
+  HomSet : O → O → Set ℓ₂
+  HomSet a b = a ⇒ b
+
 module Structures {ℓ₁ ℓ₂} {O : Set ℓ₁} {_⇒_ : O → O → Set ℓ₂} (cat : Category O _⇒_)  where
   open Category cat
 
@@ -100,12 +103,14 @@ module Structures {ℓ₁ ℓ₂} {O : Set ℓ₁} {_⇒_ : O → O → Set ℓ�
       coproduct : Coproduct a b c
       factor : ∀ {c′} → (p : a ⇒ c′) → (q : b ⇒ c′) → ∃ λ m → (p ≡ m ∘ left) × (q ≡ m ∘ right)
 
-record Functor {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
+record Functor
+    {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
     {O : Set ℓ₁} {Oᶠ : Set ℓ₃}
     {_⇒_ : O → O → Set ℓ₂} {_⇒ᶠ_ : Oᶠ → Oᶠ → Set ℓ₄}
     (cat : Category O _⇒_) (catᶠ : Category Oᶠ _⇒ᶠ_) 
     (F : O → Oᶠ)
-    : Set (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ ⊔ ℓ₄) where
+    :
+    Set (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ ⊔ ℓ₄) where
 
   open Category cat
   open Category catᶠ renaming (id to idᶠ; _∘_ to _∘ᶠ_)
@@ -265,20 +270,41 @@ module Endobifunctor where
     Set (ℓ₁ ⊔ ℓ₂)
   FromBimap cat F = Bifunctor.FromBimap cat cat cat F
 
-record NaturalTransformation {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
+record NaturalTransformation
+    {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
     {O : Set ℓ₁} {Oᵅ : Set ℓ₂}
     {_⇒_ : O → O → Set ℓ₃} {_⇒ᵅ_ : Oᵅ → Oᵅ → Set ℓ₄}
     {cat : Category O _⇒_} {catᵅ : Category Oᵅ _⇒ᵅ_}
     {F : O → Oᵅ} {G : O → Oᵅ}
     (functorF : Functor cat catᵅ F) (functorG : Functor cat catᵅ G)
     (α : ∀ a → F a ⇒ᵅ G a)
-    : Set (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ ⊔ ℓ₄) where
+    :
+    Set (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ ⊔ ℓ₄) where
   open Category {{...}}
   open Functor functorF renaming (map to mapᶠ)
   open Functor functorG renaming (map to mapᵍ)
 
   field
     naturality : ∀ {a b} (f : a ⇒ b) → α b ∘ mapᶠ f ≡ mapᵍ f ∘ α a
+
+record NaturalIsomorphism
+    {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
+    {O : Set ℓ₁} {O′ : Set ℓ₂}
+    {_⇒_ : O → O → Set ℓ₃} {_⇒′_ : O′ → O′ → Set ℓ₄}
+    {cat : Category O _⇒_} {cat′ : Category O′ _⇒′_}
+    {F : O → O′} {G : O → O′}
+    (functorF : Functor cat cat′ F) (functorG : Functor cat cat′ G)
+    (α : ∀ a → F a ⇒′ G a)
+    (β : ∀ a → G a ⇒′ F a)
+    :
+    Set (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ ⊔ ℓ₄) where
+  open Category cat′
+
+  field
+    right : NaturalTransformation functorF functorG α
+    left : NaturalTransformation functorG functorF β
+    leftId : ∀ x → α x ∘ β x ≡ id
+    rightId : ∀ x → β x ∘ α x ≡ id
 
 record Cone
     {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
