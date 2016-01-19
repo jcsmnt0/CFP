@@ -1,6 +1,9 @@
-module Axioms where
+module Axioms where -- and miscellaneous imports that most of these files need
 
-open import Relation.Binary.PropositionalEquality
+open import Function using (const; flip) public
+open import Level public
+open import Relation.Binary.PropositionalEquality public
+open ≡-Reasoning public
 
 -- simplified - the actual K axiom can be recovered by combining this with subst
 K : ∀ {ℓ} {a : Set ℓ} {x y : a} {p q : x ≡ y} → p ≡ q

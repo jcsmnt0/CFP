@@ -1,22 +1,22 @@
-open import Categories
+open import Structures.Category
 
-module FunctorCat
-    {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
-    {O : Set ℓ₁} {O′ : Set ℓ₃}
-    {_⇒_ : O → O → Set ℓ₂} {_⇒′_ : O′ → O′ → Set ℓ₄}
-    (cat : Category O _⇒_) (cat′ : Category O′ _⇒′_) 
+module Categories.Functor
+  {ℓ₁ ℓ₂ ℓ₃ ℓ₄}
+  {O : Set ℓ₁} {O′ : Set ℓ₃}
+  {_⇒_ : O → O → Set ℓ₂} {_⇒′_ : O′ → O′ → Set ℓ₄}
+  (cat : Category O _⇒_) (cat′ : Category O′ _⇒′_) 
   where
 
 open import Data.Product using (∃; _,_)
-open import Function using (flip)
-open import Relation.Binary.PropositionalEquality
-open ≡-Reasoning
 
 open import Axioms
 
-open Category cat′
-open Structures {{...}}
+open import Structures.Functor
+open import Structures.NaturalTransformation
+
+open Category {{...}}
 open Functor {{...}}
+open NaturalTransformation {{...}}
 
 Oᶠ : Set _
 Oᶠ = ∃ (Functor cat cat′)
@@ -25,25 +25,22 @@ _⇒ᶠ_ : Oᶠ → Oᶠ → Set _
 (_ , f) ⇒ᶠ (_ , g) = ∃ (NaturalTransformation f g)
 
 _∘ᶠ_ : ∀ {a b c} → b ⇒ᶠ c → a ⇒ᶠ b → a ⇒ᶠ c
-(G , g) ∘ᶠ (F , f) = (λ x → G x ∘ F x) , record
-  { naturality = λ {a}{b} h →
+_∘ᶠ_ {_ , a} {_ , b} {_ , c} (G , g) (F , f) = (λ x → G x ∘ F x) , record
+  { naturality = λ {x} {y} h →
       begin
-        (G b ∘ F b) ∘ map h
+        (G y ∘ F y) ∘ map h
       ≡⟨ sym (assoc _ _ _) ⟩
-        G b ∘ (F b ∘ map h)
-      ≡⟨ cong (_∘_ (G b)) (naturalityᶠ h) ⟩
-        G b ∘ (map h ∘ F a)
+        G y ∘ (F y ∘ map h)
+      ≡⟨ cong (_∘_ (G y)) (naturality h) ⟩
+        G y ∘ (map h ∘ F x)
       ≡⟨ assoc _ _ _ ⟩
-        (G b ∘ map h) ∘ F a
-      ≡⟨ cong (flip _∘_ (F a)) (naturalityᵍ h) ⟩
-        (map h ∘ G a) ∘ F a
+        (G y ∘ map h) ∘ F x
+      ≡⟨ cong (flip _∘_ (F x)) (naturality h) ⟩
+        (map h ∘ G x) ∘ F x
       ≡⟨ sym (assoc _ _ _) ⟩
-        map h ∘ (G a ∘ F a)
+        map h ∘ (G x ∘ F x)
       ∎
   }
-  where
-    open NaturalTransformation f renaming (naturality to naturalityᶠ)
-    open NaturalTransformation g renaming (naturality to naturalityᵍ)
 
 idᶠ : ∀ {a} → a ⇒ᶠ a
 idᶠ = (λ _ → id) , record { naturality = λ _ → trans cancelLeft (sym cancelRight) }
@@ -96,3 +93,4 @@ instance
     ; cancelLeft = cancelLeftᶠ
     ; cancelRight = cancelRightᶠ
     }
+

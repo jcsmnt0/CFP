@@ -1,14 +1,15 @@
-module Monoids ℓ where
+module Structures.Monoid ℓ where
 
 open import Data.Product using (Σ-syntax; _,_)
-open import Level
-open import Relation.Binary.PropositionalEquality
 
 open import Axioms
-open import Categories
-open import SetCat
 
-open Category (setCategory ℓ)
+open import Categories.SetCat ℓ
+
+open import Structures.Category
+open import Structures.Functor
+
+open Category {{...}}
 
 record Monoid : Set (suc ℓ) where
   field
@@ -24,16 +25,15 @@ record Monoid : Set (suc ℓ) where
   crush : Carrier → List Carrier → Carrier
   crush = foldl _⋆_
 
+open Monoid {{...}}
+
 record Homomorphism (m n : Monoid) : Set ℓ where
   constructor homomorphism
 
-  open Monoid m renaming (Carrier to a; ε to εᵃ; _⋆_ to _⋆ᵃ_)
-  open Monoid n renaming (Carrier to b; ε to εᵇ; _⋆_ to _⋆ᵇ_)
-
   field
-    mmap : a → b
-    distributivity : ∀ x y → mmap (x ⋆ᵃ y) ≡ mmap x ⋆ᵇ mmap y
-    ε-preservation : mmap εᵃ ≡ εᵇ
+    mmap : Carrier {{m}} → Carrier {{n}}
+    distributivity : ∀ x y → mmap (x ⋆ y) ≡ mmap x ⋆ mmap y
+    ε-preservation : mmap ε ≡ ε
 
 _⇒ᴹ_ : Monoid → Monoid → Set ℓ
 _⇒ᴹ_ = Homomorphism
@@ -50,7 +50,7 @@ g ∘ᴹ f = record
 cong-homomorphism : ∀
   {m n}
   {f g : m ⇒ᴹ n}
-  (p : Homomorphism.mmap f ≡ Homomorphism.mmap g)
+  (p : mmap {{f}} ≡ mmap {{g}})
   →
   f ≡ g
 cong-homomorphism refl =
@@ -70,7 +70,7 @@ instance
     }
 
 instance
-  monoidFunctor : Functor monoidCategory (setCategory ℓ) Monoid.Carrier
+  monoidFunctor : Functor monoidCategory setCategory Monoid.Carrier
   monoidFunctor = record
     { map = Homomorphism.mmap
     ; map-id = refl
@@ -83,6 +83,7 @@ record FreeMonoid (x : Set ℓ) (m : Monoid) (p : x ⇒ Monoid.Carrier m) : Set 
   field
     factor :
       (n : Monoid)
-      (q : x ⇒ Monoid.Carrier n)
+      (q : x ⇒ Carrier {{n}})
       →
       Σ[ h ∈ m ⇒ᴹ n ] q ≡ map h ∘ p 
+
