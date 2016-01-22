@@ -1,4 +1,4 @@
-module Axioms where -- and miscellaneous imports that most of these files need
+module Axioms where -- and miscellaneous imports and lemmas that several of these files need
 
 open import Function using (const; flip) public
 open import Level public
@@ -30,3 +30,18 @@ postulate
 
 _$$_ : ∀ {ℓ₁ ℓ₂} {a : Set ℓ₁} {b : a → Set ℓ₂} {f g : (x : a) → b x} → f ≡ g → ∀ x → f x ≡ g x
 refl $$ _ = refl
+
+open import Data.Product
+
+cong⟨_,_⟩ : ∀
+  {ℓ₁ ℓ₂}
+  {a : Set ℓ₁}
+  {b : a → Set ℓ₂} 
+  {x y : a}
+  {u : b x}
+  {v : b y}
+  (p : x ≡ y)
+  (q : subst b p u ≡ v)
+  →
+  (x , u) ≡ (y , v)
+cong⟨ refl , refl ⟩ = refl
