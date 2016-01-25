@@ -1,7 +1,7 @@
 module Axioms where -- and miscellaneous imports and lemmas that several of these files need
 
 open import Function using (const; flip) public
-open import Level public
+open import Level renaming (zero to lzero; suc to lsuc) public
 open import Relation.Binary.PropositionalEquality public
 open ≡-Reasoning public
 

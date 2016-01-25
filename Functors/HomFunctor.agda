@@ -13,7 +13,7 @@ open import Categories.SetCat ℓ₂
 
 open import Structures.Functor
 
-open Category {{...}}
+open Category cat
 
 instance
   homFunctor : Functor cat setCategory (HomSet a)

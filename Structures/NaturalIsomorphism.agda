@@ -21,7 +21,7 @@ record NaturalIsomorphism
   Set (ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ ⊔ ℓ₄) where
 
   field
-    right : NaturalTransformation functorF functorG α
-    left : NaturalTransformation functorG functorF β
+    rightNT : NaturalTransformation functorF functorG α
+    leftNT : NaturalTransformation functorG functorF β
     leftId : ∀ x → α x ∘ β x ≡ id
     rightId : ∀ x → β x ∘ α x ≡ id

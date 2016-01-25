@@ -23,7 +23,7 @@ Eq = ∃ λ x → f x ≡ g x
 
 open Functor (Δ Eq) renaming (map to mapᵟ)
 
-α : ∀ x → const Eq x ⇒ D x
+α : ∀ x → const Eq x ⇒ˢ D x
 α {aᴵ} = proj₁
 α {bᴵ} = f ∘ proj₁
 
@@ -35,10 +35,10 @@ naturalityᵟ gᴵ = ext proj₂
 
 factor : ∀
   {c}
-  (β : ∀ x → const c x ⇒ D x)
+  (β : ∀ x → const c x ⇒ˢ D x)
   (nt : NaturalTransformation (Δ c) functorD β)
   →
-  Σ[ m ∈ (c ⇒ Eq) ] (∀ a → β a ≡ α a ∘ m)
+  Σ[ m ∈ (c ⇒ˢ Eq) ] (∀ a → β a ≡ α a ∘ m)
 factor β nt = (λ x → β aᴵ x , trans (sym (naturality fᴵ $$ x)) (naturality gᴵ $$ x)) , λ
   { aᴵ → refl
   ; bᴵ → naturality fᴵ

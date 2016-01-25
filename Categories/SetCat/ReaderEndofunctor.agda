@@ -7,7 +7,7 @@ open import Categories.SetCat ℓ
 open import Structures.Endofunctor
 
 instance
-  ReaderEndofunctor : Endofunctor setCategory (λ b → (a ⇒ b))
+  ReaderEndofunctor : Endofunctor setCategory (λ b → (a ⇒ˢ b))
   ReaderEndofunctor = record
     { map = λ g f x → g (f x)
     ; map-id = refl

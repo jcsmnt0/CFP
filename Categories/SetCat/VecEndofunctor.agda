@@ -2,19 +2,16 @@ open import Data.Nat
 
 module Categories.SetCat.VecEndofunctor ℓ (n : ℕ) where
 
+open import Data.Fin hiding (lift)
 open import Data.Vec using (Vec; []; _∷_; map)
 open import Function using (id; _∘_)
 
-open import Axioms hiding (zero; suc)
+open import Axioms
 open import Functors.Representable
 
 open import Categories.SetCat ℓ
 
 open import Structures.Endofunctor
-
-data Fin : ℕ → Set ℓ where
-  zero : ∀ {n} → Fin (suc n)
-  suc : ∀ {n} → Fin n → Fin (suc n)
 
 lookup : ∀ {ℓ m} {a : Set ℓ} → Fin m → Vec a m → a
 lookup () []
@@ -34,8 +31,8 @@ map-∘ _ _ [] = refl
 map-∘ _ _ (_ ∷ _) = cong (_∷_ _) (map-∘ _ _ _)
 
 instance
-  vecFunctor : Endofunctor setCategory (λ a → Vec a n)
-  vecFunctor = record
+  vecEndofunctor : Endofunctor setCategory (λ a → Vec a n)
+  vecEndofunctor = record
     { map = map
     ; map-id = ext map-id
     ; map-∘ = λ f g → ext (map-∘ f g)
@@ -83,14 +80,18 @@ tabulateLookupCancel [] = refl
 tabulateLookupCancel (_ ∷ _) = cong (_∷_ _) (tabulateLookupCancel _)
 
 instance
-  vecRepresentable : Representable vecFunctor (λ _ → flip lookup) (λ _ → tabulate)
+  vecRepresentable :
+    Representable
+      vecEndofunctor
+      (λ _ xs i → lookup (lower i) xs)
+      (λ _ f → tabulate (λ i → f (lift i)))
   vecRepresentable = record
-    { right = record
-      { naturality = λ _ → ext λ i → ext λ xs → mapCommutesOverLookup i xs
-      }
-    ; left = record
-      { naturality = λ f → ext (mapCommutesOverTabulate f)
-      }
-    ; leftId = λ _ → ext λ tab → ext (lookupTabulateCancel tab)
+    { rightNT = record
+        { naturality = λ _ → ext λ xs → ext λ i → mapCommutesOverLookup xs (lower i)
+        }
+    ; leftNT = record
+        { naturality = λ f → ext λ g → mapCommutesOverTabulate f (λ i → g (lift i))
+        }
+    ; leftId = λ _ → ext λ tab → ext λ i → lookupTabulateCancel (λ x → tab (lift x)) (lower i)
     ; rightId = λ _ → ext tabulateLookupCancel
     }

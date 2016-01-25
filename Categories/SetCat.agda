@@ -4,12 +4,12 @@ open import Axioms
 
 open import Structures.Category
 
-infixr 1 _⇒_
-_⇒_ : Set ℓ → Set ℓ → Set ℓ
-a ⇒ b = a → b
+infixr 1 _⇒ˢ_
+_⇒ˢ_ : Set ℓ → Set ℓ → Set ℓ
+a ⇒ˢ b = a → b
 
 instance
-  setCategory : Category (Set ℓ) _⇒_
+  setCategory : Category (Set ℓ) _⇒ˢ_
   setCategory = record
       { _∘_ = λ g f x → g (f x)
       ; id = λ x → x

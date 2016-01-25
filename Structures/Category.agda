@@ -63,7 +63,10 @@ record Category {ℓ₁ ℓ₂} (O : Set ℓ₁) (_⇒_ : O → O → Set ℓ₂
       leftInverse : left ∘ right ≡ id
 
   HomSet : O → O → Set ℓ₂
-  HomSet a b = a ⇒ b
+  HomSet = _⇒_
+
+  ContraHomSet : O → O → Set ℓ₂
+  ContraHomSet = _⇐_
 
 cancelDoubleDual : ∀
   {ℓ₁ ℓ₂}

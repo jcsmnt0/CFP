@@ -21,6 +21,6 @@ Representable : ∀
   (index : ∀ b → F b → (a ⇒ b))
   (tabulate : ∀ b → (a ⇒ b) → F b)
   →
-  Set (ℓ₁ ⊔ suc ℓ₂)
+  Set (ℓ₁ ⊔ lsuc ℓ₂)
 Representable {cat = cat} {a = a} functorF index tabulate =
   NaturalIsomorphism functorF (homFunctor cat a) index tabulate
