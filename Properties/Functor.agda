@@ -1,4 +1,4 @@
-module Functors.Representable where
+module Properties.Functor where
 
 open import Axioms
 

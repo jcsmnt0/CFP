@@ -9,11 +9,11 @@ module NaturalTransformations.CoYoneda
 
 open import Structures.NaturalIsomorphism
 
-open import NaturalTransformations.Yoneda (Category.op cat) public
-  using ()
-  renaming (NT→functor to NT→contrafunctor; functor→NT to contrafunctor→NT)
-
-open import NaturalTransformations.Yoneda (Category.op cat)
-
-CoYonedaLemma : NaturalIsomorphism functorᴸ functorᴿ NT→contrafunctor contrafunctor→NT
-CoYonedaLemma = YonedaLemma
+open import NaturalTransformations.Yoneda (Category.op cat) public using ()
+  renaming (
+    NT→functor to NT→contrafunctor;
+    functor→NT to contrafunctor→NT;
+    NT→functor′ to NT→contrafunctor′;
+    functor→NT′ to contrafunctor→NT′;
+    yonedaLemma to coYonedaLemma;
+    yonedaIso to coYonedaIso)

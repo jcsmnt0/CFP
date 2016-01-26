@@ -54,14 +54,6 @@ record Category {ℓ₁ ℓ₂} (O : Set ℓ₁) (_⇒_ : O → O → Set ℓ₂
     ; cancelRight = cancelLeft
     }
 
-  -- categorical isomorphism
-  record _⇔_ (a b : O) : Set (ℓ₁ ⊔ ℓ₂) where
-    field
-      right : a ⇒ b
-      left : b ⇒ a
-      rightInverse : right ∘ left ≡ id
-      leftInverse : left ∘ right ≡ id
-
   HomSet : O → O → Set ℓ₂
   HomSet = _⇒_
 
@@ -78,4 +70,3 @@ cancelDoubleDual {O = O} {_⇒_ = _⇒_} (category _∘_ id assoc cancelLeft can
     (λ (assoc′ : ∀ {a b c d} (h : c ⇒ d) (g : b ⇒ c) (f : a ⇒ b) → h ∘ (g ∘ f) ≡ (h ∘ g) ∘ f)
       → category _∘_ id assoc′ cancelLeft cancelRight)
     (ext-implicit λ _ → ext-implicit λ _ → ext-implicit λ _ → ext-implicit λ _ → ext λ _ → ext λ _ → ext λ _ → K)
-

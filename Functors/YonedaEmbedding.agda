@@ -7,7 +7,7 @@ module Functors.YonedaEmbedding
   (cat : Category O _⇒_)
   where
 
-open import Data.Product using (<_,_>; _,_; ,_)
+open import Data.Product using (<_,_>; _,_; ,_; proj₁)
 
 open import Axioms
 
@@ -23,9 +23,6 @@ open import Functors.HomFunctor cat
 open import NaturalTransformations.Yoneda cat
 
 open Category {{...}}
-open Functor {{...}}
-open NaturalIsomorphism YonedaLemma
-open NaturalTransformation rightNT
 
 embed : O → Oᶠ
 embed = < HomSet , homFunctor >
@@ -39,8 +36,8 @@ mapYE-id {a} = cong⟨ (ext λ _ → ext λ _ → cancelRight) , congNT ⟩
 mapYE-∘ : {a b c : O} (f : b ⇒ a) (g : c ⇒ b) → mapYE (f ∘ g) ≡ mapYE g ∘ mapYE f
 mapYE-∘ _ _ = cong⟨ (ext λ _ → ext λ _ → assoc _ _ _) , congNT ⟩
 
-YonedaEmbedding : Contrafunctor cat functorCategory embed
-YonedaEmbedding = record
+yonedaEmbeddingFunctor : Contrafunctor cat functorCategory embed
+yonedaEmbeddingFunctor = record
   { map = mapYE
   ; map-id = λ {a} → mapYE-id {a}
   ; map-∘ = mapYE-∘

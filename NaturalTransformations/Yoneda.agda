@@ -7,7 +7,7 @@ module NaturalTransformations.Yoneda
   (cat : Category O _⇒_)
   where
 
-open import Data.Product using (∃; _×_; _,_; proj₁; proj₂)
+open import Data.Product using (∃; _×_; _,_; ,_; proj₁; proj₂)
 
 open import Axioms
 
@@ -21,6 +21,8 @@ open import Categories.Functor cat setCategory
 open import Categories.Product functorCategory cat
 
 open import Functors.HomFunctor cat
+
+open import Categories.Iso setCategory₁ renaming (_⇔_ to _≈_)
 
 open Category {{...}}
 open Functor {{...}}
@@ -96,9 +98,25 @@ functorᴿ = record
 NT→functor : ∀ a → Yonedaᴸ a → Yonedaᴿ a
 NT→functor ((F , functorF) , a) (α , nt-α) = lift (α a id)
 
+NT→functor′ : ∀
+  {a F α}
+  {functorF : Functor _ _ F}
+  (nt : NaturalTransformation (homFunctor a) functorF α)
+  →
+  F a
+NT→functor′ nt = lower (NT→functor _ (, nt))
+
 functor→NT : ∀ a → Yonedaᴿ a → Yonedaᴸ a
 functor→NT ((F , functorF) , a) (lift x) =
   (λ _ → flip map x) , record { naturality = λ f → ext λ g → map-∘ g f $$ x }
+
+functor→NT′ : ∀
+  {a F}
+  (functorF : Functor _ _ F)
+  (x : F a)
+  →
+  ∃ (NaturalTransformation (homFunctor a) functorF)
+functor→NT′ functorF x = functor→NT ((, functorF) , _) (lift x)
 
 naturalityLR : ∀ {a b} (f : a ⇒ˣ b) → NT→functor b ∘ map {{functorᴸ}} f ≡ map {{functorᴿ}} f ∘ NT→functor a
 naturalityLR {(F , functorF) , a} {(G , functorG) , b} ((α , nt-α) , h) =
@@ -134,10 +152,10 @@ naturalityRL {(F , functorF) , a} {(G , functorG) , b} ((α , nt-α) , h) =
       ⟩
     }
 
-leftId : ∀ x → NT→functor x ∘ functor→NT x ≡ id
+private leftId : ∀ x → NT→functor x ∘ functor→NT x ≡ id
 leftId ((F , functorF) , a) = ext λ { (lift x) → cong lift (map-id {{functorF}} $$ x) }
 
-rightId : ∀ x → functor→NT x ∘ NT→functor x ≡ id
+private rightId : ∀ x → functor→NT x ∘ NT→functor x ≡ id
 rightId ((F , functorF) , a) =
   ext λ
     { (α , nt-α) → cong⟨
@@ -154,10 +172,22 @@ rightId ((F , functorF) , a) =
       ⟩
     }
 
-YonedaLemma : NaturalIsomorphism functorᴸ functorᴿ NT→functor functor→NT
-YonedaLemma = record
+yonedaLemma : NaturalIsomorphism functorᴸ functorᴿ NT→functor functor→NT
+yonedaLemma = record
   { rightNT = record { naturality = naturalityLR }
   ; leftNT = record { naturality = naturalityRL }
   ; leftId = leftId
   ; rightId = rightId
+  }
+
+yonedaIso : ∀
+  {a F}
+  {functorF : Functor _ _ F}
+  →
+  ∃ (NaturalTransformation (homFunctor a) functorF) ≈ Lift (F a)
+yonedaIso {functorF = functorF} = record
+  { right = λ nt → lift (NT→functor′ (proj₂ nt))
+  ; left = λ p → functor→NT′ functorF (lower p)
+  ; rightInverse = leftId ((, functorF) , _)
+  ; leftInverse = rightId _
   }

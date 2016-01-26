@@ -9,9 +9,13 @@ module Categories.Preorder
   (≤-uniqueness : ∀ {a b} {p q : a ≤ b} → p ≡ q)
   where
 
-open import Data.Product using (proj₁; proj₂)
+open import Data.Product using (∃; proj₁; _,_)
 
 open import Structures.Category
+open import Structures.NaturalTransformation
+
+open import Categories.SetCat (ℓ₁ ⊔ lsuc ℓ₂)
+open import Categories.Iso setCategory using () renaming (_⇔_ to _≈_)
 
 open IsPreorder isPreorder renaming (trans to trans-≤; refl to refl-≤)
 
@@ -24,3 +28,28 @@ instance
     ; cancelRight = ≤-uniqueness
     ; assoc = λ _ _ _ → ≤-uniqueness
     }
+
+open import Functors.HomContrafunctor preorderCategory
+open import Functors.HomFunctor preorderCategory
+
+≤-isoNT : ∀
+  {a b}
+  →
+  Lift {ℓ = lsuc ℓ₂} (∀ x → a ≤ x → b ≤ x) ≈ ∃ (NaturalTransformation (homFunctor a) (homFunctor b))
+≤-isoNT = record
+  { right = λ α → (lower α , record { naturality = λ _ → ext λ _ → ≤-uniqueness })
+  ; left = λ nt → lift (proj₁ nt)
+  ; rightInverse = ext λ _ → cong⟨ refl , congNT ⟩
+  ; leftInverse = ext λ _ → refl
+  }
+
+≤-isoContraNT : ∀
+  {a b}
+  →
+  Lift {ℓ = lsuc ℓ₂} (∀ x → x ≤ a → x ≤ b) ≈ ∃ (NaturalTransformation (homContrafunctor a) (homContrafunctor b))
+≤-isoContraNT = record
+  { right = λ α → (lower α , record { naturality = λ _ → ext λ _ → ≤-uniqueness })
+  ; left = λ nt → lift (proj₁ nt)
+  ; rightInverse = ext λ _ → cong⟨ refl , congNT ⟩
+  ; leftInverse = ext λ _ → refl
+  }

@@ -17,4 +17,3 @@ instance
       ; cancelLeft = ext λ _ → refl
       ; cancelRight = ext λ _ → refl
       }
-

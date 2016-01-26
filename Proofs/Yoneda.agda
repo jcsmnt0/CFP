@@ -2,81 +2,94 @@
 module Proofs.Yoneda where
 
 open import Data.Product using (∃; _,_; ,_; proj₁; proj₂)
+open import Relation.Binary.HeterogeneousEquality as HE using (_≅_)
 
 open import Axioms
 open import Lemmas
 
 open import Structures.Category
 open import Structures.Functor
+open import Structures.InitialObject
 open import Structures.NaturalIsomorphism
 open import Structures.NaturalTransformation
 
-open import Functors.CoYonedaEmbedding
-open import Functors.YonedaEmbedding
+open import Categories.Iso
+open import Categories.SetCat
 
-open import NaturalTransformations.CoYoneda
-open import NaturalTransformations.Yoneda
+-- this is some kind of functor
+lowerIso : ∀
+  {ℓ ℓ′}
+  {a b : Set ℓ}
+  →
+  let
+    _≈_ = _⇔_ (setCategory ℓ)
+    _≈′_ = _⇔_ (setCategory (ℓ ⊔ ℓ′))
+  in
+    Lift {ℓ = ℓ′} a ≈′ Lift {ℓ = ℓ′} b → a ≈ b
+lowerIso p = record
+  { right = λ x → lower (right (lift x))
+  ; left = λ x → lower (left (lift x))
+  ; rightInverse = ext λ x → cong lower (rightInverse $$ lift x)
+  ; leftInverse = ext λ x → cong lower (leftInverse $$ lift x)
+  }
+  where open Iso _ p
 
-module Preorder where
-  open import Data.Nat
+_≈_ : ∀ {ℓ} → Set ℓ → Set ℓ → Set ℓ
+_≈_ {ℓ} = _⇔_ (setCategory ℓ)
+
+module YonedaPreorder where
+  open import Data.Nat hiding (_⊔_)
   open import Relation.Binary
 
   open DecTotalOrder decTotalOrder using () renaming (isPreorder to ≤-isPreorder; trans to ≤-trans)
 
   open import Categories.Preorder ≤-isPreorder ≤-uniqueness
-
   open import Functors.HomContrafunctor preorderCategory
+  open import NaturalTransformations.CoYoneda preorderCategory
+  open import NaturalTransformations.Yoneda preorderCategory
 
-  open Category preorderCategory
+  open Category (isoCategory (setCategory (lsuc lzero)))
+  open NaturalIsomorphism coYonedaLemma
 
-  ≤-NT : ∀ {a b} (α : ∀ x → x ≤ a → x ≤ b) → NaturalTransformation (homContrafunctor a) (homContrafunctor b) α
-  ≤-NT _ = record { naturality = λ _ → ext λ _ → ≤-uniqueness }
+  yonedaPreorder : ∀ {a b} → (∀ x → a ≤ x → b ≤ x) ≈ (b ≤ a)
+  yonedaPreorder = lowerIso (yonedaIso ∘ ≤-isoNT)
 
-  yonedaLR : ∀ {a b} → (∀ x → x ≤ a → x ≤ b) → a ≤ b
-  yonedaLR p = lower (NT→contrafunctor _ _ (, ≤-NT p)) 
+  coYonedaPreorder : ∀ {a b} → (∀ x → x ≤ a → x ≤ b) ≈ (a ≤ b)
+  coYonedaPreorder = lowerIso (coYonedaIso ∘ ≤-isoContraNT)
+  
+module YonedaVec ℓ n where
+  open import Data.Fin hiding (lift)
+  open import Data.Vec
 
-  yonedaRL : ∀ {a b} → a ≤ b → ∀ x → x ≤ a → x ≤ b
-  yonedaRL {a} {b} p x q = proj₁ (contrafunctor→NT _ ((, homContrafunctor b) , a) (lift p)) x q 
+  open import Categories.SetCat.VecEndofunctor ℓ n
+  open import Functors.HomFunctor (setCategory ℓ)
+  open import NaturalTransformations.Yoneda (setCategory ℓ)
 
-module Vec ℓ where
-  open import Data.Vec hiding (tabulate)
+  open Category (setCategory ℓ)
+  open NaturalIsomorphism vecRepresentable
 
-  open import Categories.SetCat ℓ
-  open import Categories.SetCat.VecEndofunctor ℓ
+  yonedaVec : ∀ {a} → ∃ (NaturalTransformation (homFunctor a) vecEndofunctor) ≈ Lift (Vec a n)
+  yonedaVec = yonedaIso
 
-  open import Functors.HomFunctor setCategory
+  allFin′ : Vec (Fin n) n
+  allFin′ = map lower (lower (right (, leftNT)))
+    where open Iso _ yonedaVec
 
-  open Category setCategory
-
-  yonedaLR : ∀ {a : Set ℓ} {n α} → NaturalTransformation (homFunctor a) (vecEndofunctor n) α → Vec a n
-  yonedaLR nt-α = lower (NT→functor _ _ (, nt-α))
-
-  yonedaRL : ∀ {a n} → Vec a n → ∃ (NaturalTransformation (homFunctor a) (vecEndofunctor n))
-  yonedaRL {a} {n} x = functor→NT _ ((, vecEndofunctor n) , a) (lift x)
-
-module Fin (ℓ : Level) where
-  open import Data.Empty
+module YonedaFin where
   open import Data.Fin hiding (lift; _≤_)
   open import Data.Nat
   open import Relation.Binary
-  open import Relation.Nullary
 
   open DecTotalOrder decTotalOrder using () renaming (isPreorder to ≤-isPreorder; trans to ≤-trans)
 
   open import Categories.Preorder ≤-isPreorder ≤-uniqueness
-  open import Categories.SetCat ℓ
-
-  open import Functors.Fin
+  open import Categories.SetCat.FinFunctor
   open import Functors.HomFunctor preorderCategory
+  open import NaturalTransformations.Yoneda preorderCategory
 
-  finZeroEmpty : ¬ (Fin 0)
-  finZeroEmpty ()
+  yonedaFin : ∀ {n} → ∃ (NaturalTransformation (homFunctor (suc n)) finFunctor) ≈ Lift (Fin (suc n))
+  yonedaFin = yonedaIso
 
-  yonedaLR : ∀ {n : ℕ} {α} → NaturalTransformation (homFunctor n) finFunctor α → Fin n
-  yonedaLR {α = α} nt = lower (NT→functor _ _ (, nt))
-
-  yonedaRL : ∀ {n} → Fin n → ∃ (NaturalTransformation (homFunctor n) finFunctor)
-  yonedaRL {n} i = functor→NT _ ((, finFunctor) , n) (lift i)
-
-  fromℕ≤′ : ∀ {m} → Fin m → ∀ n → (m ≤ n) → Fin n
-  fromℕ≤′ i = proj₁ (yonedaRL i)
+  last : ∀ {n} → Fin (suc n)
+  last = lower (right (, fromℕ≤-NT))
+    where open Iso _ yonedaFin

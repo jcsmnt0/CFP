@@ -7,10 +7,9 @@ open import Data.Vec using (Vec; []; _∷_; map)
 open import Function using (id; _∘_)
 
 open import Axioms
-open import Functors.Representable
 
 open import Categories.SetCat ℓ
-
+open import Properties.Functor
 open import Structures.Endofunctor
 
 lookup : ∀ {ℓ m} {a : Set ℓ} → Fin m → Vec a m → a
