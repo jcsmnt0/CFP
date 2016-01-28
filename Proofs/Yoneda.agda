@@ -56,24 +56,6 @@ module YonedaPreorder where
 
   coYonedaPreorder : ∀ {a b} → (∀ x → x ≤ a → x ≤ b) ≈ (a ≤ b)
   coYonedaPreorder = lowerIso (coYonedaIso ∘ ≤-isoContraNT)
-  
-module YonedaVec ℓ n where
-  open import Data.Fin hiding (lift)
-  open import Data.Vec
-
-  open import Categories.SetCat.VecEndofunctor ℓ n
-  open import Functors.HomFunctor (setCategory ℓ)
-  open import NaturalTransformations.Yoneda (setCategory ℓ)
-
-  open Category (setCategory ℓ)
-  open NaturalIsomorphism vecRepresentable
-
-  yonedaVec : ∀ {a} → ∃ (NaturalTransformation (homFunctor a) vecEndofunctor) ≈ Lift (Vec a n)
-  yonedaVec = yonedaIso
-
-  allFin′ : Vec (Fin n) n
-  allFin′ = map lower (lower (right (, leftNT)))
-    where open Iso _ yonedaVec
 
 module YonedaFin where
   open import Data.Fin hiding (lift; _≤_)
